@@ -1,4 +1,4 @@
-; renders 200x200 red square on the center of the screen (assumes 1920x1080 resolution)
+; renders 400x400 red square on the center of the screen (assumes 1920x1080 resolution)
 bits 32
 org 0x00010000
 	; minimal ELF header (muppetlabs.com/~breadbox/software/tiny/teensy.html)
@@ -34,17 +34,15 @@ draw:
 	div ebx ; edx = x-coord , eax = y-coord
 	; check if pixel is inside square:
 	; 860  = (1920 - 200) / 2
-	; 1060 = 860 + 200
 	; 440  = (1080 - 200) / 2
-	; 640  = 440 + 200
 	; x,y > 0 => (x - 861 < 199) && (y - 441 < 199)
 	sub edx, 861
 	mov ebx, 199
 	cmp edx, ebx
-	jae outside ; (x - 861 >= 199)
+	jae outside
 	sub eax, 441
 	cmp eax, ebx
-	jae outside ; (y - 441 >= 199)
+	jae outside
 	mov [esp+ecx*4+2], byte 0xff ; red (BGRA)
 outside:
 	loop draw
