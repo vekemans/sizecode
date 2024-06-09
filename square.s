@@ -35,7 +35,7 @@ draw:
 	; check if pixel is inside square:
 	; 860  = (1920 - 200) / 2
 	; 440  = (1080 - 200) / 2
-	; x,y > 0 => (x - 861 < 199) && (y - 441 < 199)
+	; x,y unsigned => (x - 861 < 199) && (y - 441 < 199)
 	sub edx, 861
 	mov ebx, 199
 	cmp edx, ebx
