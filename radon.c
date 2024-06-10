@@ -1,4 +1,4 @@
-#include <math.h> // tanf, sinf, fmodf
+#include <math.h> // tanf, sinf
 #include <fcntl.h> // open
 #include <unistd.h> // pwrite
 
@@ -11,21 +11,24 @@ static float f(int x, int y) {
 	return 0.0f;
 }
 
-#define wt 1920u
-#define ht 1080u
+// screen dimensions
+#define wt 1920
+#define ht 1080
 #define ch 4
-#define si 412 // sum iterations
-#define rot 0.5*0.0175f // ~1 deg
 
-#include <string.h>
+// it's important that 1-zt*rot is close to zero
+// to minimize loss of precision when mapping z -> x
+#define zt 114.6f    // z scaling
+#define rot 0.00873f // rotation of ~0.5 deg per frame
+
+#include <stdio.h>
 int main() {
 	int fb; // framebuffer fd
 	if ((fb = open("/dev/fb0", O_RDWR)) < 0) {
 		return 1;
 	}
 
-	unsigned char buf[wt*ht*ch];
-	memset(buf, 0, sizeof buf);
+	unsigned char buf[wt*ht*ch] = {0};
 
 	// f(x,y) in [0,1] specifies the density of the object
 	// let radon transform = R(f(x,y)), convert (x,y) -> (s,u) by rotating through the origin by an angle z
@@ -35,21 +38,20 @@ int main() {
 	float z = 0;
 	do {
 		float tn = -tanf(z * 0.5), sn = sinf(z), sum = 0;
-		for (int x = wt-400; x > 400; x--) {
-			for (int y = ht-200; y > 200; y--) {
+		for (int x = wt-760; x > 760; x--) {
+			for (int y = ht-340; y > 340; y--) {
 				// rotation by shearing thrice
 				// cohost.org/tomforsyth/post/891823-rotation-with-three
+				// TODO shear pixels without trig functions
 				int s = (x-960) * (1+tn*sn) + (y-540) * sn, u = (x-960) * (2*tn+tn*tn*sn) + (y-540) * (1+sn*tn);
-				//int s = x-960, u = y-540;
 				sum = 0.005f * (sum + f(s,u));
-				int q = 120*z; buf[(q+wt*y)*4+2] += 255u * sum; // sinogram
-				buf[(x+wt*y)*4+1] = 255u * f(s,u); // object
+				buf[((int)(zt*z)+wt*y)*4+2] += 255u * sum; // sinogram
+				//buf[(x+wt*y)*4+1] = 255u * f(s,u); // object
 			}
 		}
-		if (pwrite(fb, buf, wt*ht*ch, 0) < 0) {
-			return 2;
-		}
+		pwrite(fb, buf, wt*ht*ch, 0);
 		z += rot;
+		if (zt*z > 1920) break;
 	} while (1);
 
 	return 0;
