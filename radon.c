@@ -1,7 +1,12 @@
 #include <fcntl.h>  // open
 #include <unistd.h> // pwrite
 
-#define pi 3.1415926535f
+#define pi 3.1415926535f // contains constants 13, 11 in lower byte
+
+typedef union x2f {
+	unsigned int x;
+	float f;
+} x2f;
 
 // bhaskara forumula, good approximation within [0,pi]
 float sinf(float x) {
@@ -11,7 +16,12 @@ float sinf(float x) {
 // pade 4/4 approximant, good within [0,pi]
 float cosf(float x) {
 	float x2 = x * x, x4 = x2 * x2;
-	return ((313.f / 15120.f) * x4 - (115.f / 252.f) * x2 + 1) / ((13.f / 15120.f) * x4 + (11.f / 252.f) * x2 + 1);
+	// alternative designed for recycling constants (more error but ok)
+	x2f f = {0x388a3c18}; // 0.000066 with 60, 24 in lower 2 bytes
+	float a = 13 * f.f, b = 11 * 60 * f.f;
+	return ((24 * a + f.f) * x4 - (10 * b + b / 2) * x2 + 1) / (a * x4 + b * x2 + 1);
+	// original
+	//return ((313.f / 15120.f) * x4 - (115.f / 252.f) * x2 + 1) / ((13.f / 15120.f) * x4 + (11.f / 252.f) * x2 + 1);
 }
 
 // indicator function
@@ -33,7 +43,6 @@ static float f(int x, int y) {
 #define zt 114.6f    // z scaling
 #define rot 0.00873f // rotation of ~0.5 deg per frame
 
-#include <stdio.h>
 int main() {
 	int fb; // framebuffer fd
 	if ((fb = open("/dev/fb0", O_RDWR)) < 0) return 1;
