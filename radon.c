@@ -1,10 +1,22 @@
-#include <math.h> // tanf, sinf
-#include <fcntl.h> // open
+#include <fcntl.h>  // open
 #include <unistd.h> // pwrite
+
+#define pi 3.1415926535f
+
+// bhaskara forumula, good approximation within [0,pi]
+float sinf(float x) {
+	return (16 * x * (pi - x)) / (5 * pi * pi - 4 * x * (pi - x));
+}
+
+// pade 4/4 approximant, good within [0,pi]
+float cosf(float x) {
+	float x2 = x * x, x4 = x2 * x2;
+	return ((313.f / 15120.f) * x4 - (115.f / 252.f) * x2 + 1) / ((13.f / 15120.f) * x4 + (11.f / 252.f) * x2 + 1);
+}
 
 // indicator function
 static float f(int x, int y) {
-	// 400x100 center at 0,0 (clipped)
+	// 400x100 center at 0,0
 	if (-100 < x && x < 100 && -50 < y && y < 50) {
 		return 1.0f;
 	}
@@ -24,9 +36,7 @@ static float f(int x, int y) {
 #include <stdio.h>
 int main() {
 	int fb; // framebuffer fd
-	if ((fb = open("/dev/fb0", O_RDWR)) < 0) {
-		return 1;
-	}
+	if ((fb = open("/dev/fb0", O_RDWR)) < 0) return 1;
 
 	unsigned char buf[wt*ht*ch] = {0};
 
@@ -37,13 +47,11 @@ int main() {
 
 	float z = 0;
 	do {
-		float tn = -tanf(z * 0.5), sn = sinf(z), sum = 0;
+		float zpi = z - pi * (int)(z / pi); // modulo pi
+		float cs = cosf(zpi), sn = sinf(zpi), sum = 0;
 		for (int x = wt-760; x > 760; x--) {
 			for (int y = ht-340; y > 340; y--) {
-				// rotation by shearing thrice
-				// cohost.org/tomforsyth/post/891823-rotation-with-three
-				// TODO shear pixels without trig functions
-				int s = (x-960) * (1+tn*sn) + (y-540) * sn, u = (x-960) * (2*tn+tn*tn*sn) + (y-540) * (1+sn*tn);
+				int s = (x-960) * cs + (y-540) * sn, u = (x-960) * -sn + (y-540) * cs;
 				sum = 0.005f * (sum + f(s,u));
 				buf[((int)(zt*z)+wt*y)*4+2] += 255u * sum; // sinogram
 				//buf[(x+wt*y)*4+1] = 255u * f(s,u); // object
@@ -51,7 +59,7 @@ int main() {
 		}
 		pwrite(fb, buf, wt*ht*ch, 0);
 		z += rot;
-		if (zt*z > 1920) break;
+		if (zt * z > 1920) break;
 	} while (1);
 
 	return 0;
