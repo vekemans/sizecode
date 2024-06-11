@@ -1,12 +1,7 @@
 #include <fcntl.h>  // open
 #include <unistd.h> // pwrite
 
-#define pi 3.1415926535f // contains constants 13, 11 in lower byte
-
-typedef union x2f {
-	unsigned int x;
-	float f;
-} x2f;
+#define pi 3.1415926535f
 
 // bhaskara forumula, good approximation within [0,pi]
 float sinf(float x) {
@@ -16,21 +11,12 @@ float sinf(float x) {
 // pade 4/4 approximant, good within [0,pi]
 float cosf(float x) {
 	float x2 = x * x, x4 = x2 * x2;
-	// alternative designed for recycling constants (more error but ok)
-	x2f f = {0x388a3c18}; // 0.000066 with 60, 24 in lower 2 bytes
-	float a = 13 * f.f, b = 11 * 60 * f.f;
-	return ((24 * a + f.f) * x4 - (10 * b + b / 2) * x2 + 1) / (a * x4 + b * x2 + 1);
-	// original
-	//return ((313.f / 15120.f) * x4 - (115.f / 252.f) * x2 + 1) / ((13.f / 15120.f) * x4 + (11.f / 252.f) * x2 + 1);
+	return (0.020701f * x4 - 0.456349f * x2 + 1) / (0.00086f * x4 + 0.043651f * x2 + 1);
 }
 
-// (binary) indicator function
+// indicator function, 400x100 rectangle with center at 0,0
 static int f(int x, int y) {
-	// 400x100 center at 0,0
-	if (-100 < x && x < 100 && -50 < y && y < 50) {
-		return 1;
-	}
-	return 0;
+	return -100 < x && x < 100 && -50 < y && y < 50;
 }
 
 // screen dimensions
