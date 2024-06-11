@@ -24,13 +24,13 @@ float cosf(float x) {
 	//return ((313.f / 15120.f) * x4 - (115.f / 252.f) * x2 + 1) / ((13.f / 15120.f) * x4 + (11.f / 252.f) * x2 + 1);
 }
 
-// indicator function
-static float f(int x, int y) {
+// (binary) indicator function
+static int f(int x, int y) {
 	// 400x100 center at 0,0
 	if (-100 < x && x < 100 && -50 < y && y < 50) {
-		return 1.0f;
+		return 1;
 	}
-	return 0.0f;
+	return 0;
 }
 
 // screen dimensions
