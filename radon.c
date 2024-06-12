@@ -1,3 +1,5 @@
+// reference implemetation of a radon transform sinogram
+
 #include <fcntl.h>  // open
 #include <unistd.h> // pwrite
 
@@ -46,10 +48,10 @@ int main() {
 		float cs = cosf(zpi), sn = sinf(zpi), sum = 0;
 		for (int x = wt-760; x > 760; x--) {
 			for (int y = ht-340; y > 340; y--) {
-				int s = (x-960) * cs + (y-540) * sn, u = (x-960) * -sn + (y-540) * cs;
+				int s = (x-960) * cs + (y-540) * sn, u = (y-540) * cs - (x-960) * sn;
 				sum = 0.005f * (sum + f(s,u));
 				buf[((int)(zt*z)+wt*y)*4+2] += 255u * sum; // sinogram
-				//buf[(x+wt*y)*4+1] = 255u * f(s,u); // object
+				//buf[(x+wt*y)*4+1] = 255u * f(s,u); // rotating object
 			}
 		}
 		pwrite(fb, buf, wt*ht*ch, 0);
