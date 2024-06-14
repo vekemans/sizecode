@@ -31,8 +31,8 @@ section .text
 	fldz                      ; angle z=0
 
 main:
-	mov ecx, ebp ; pixel index
-	shr ecx, 2   ; 1920 * 1080
+	; evaluation grid of 1920*400
+	mov ecx, 1420800 ; 1920*1080 - 1920*340
 
 draw:
 	mov ebx, 1920
@@ -87,7 +87,9 @@ draw:
 
 	mov [esp+ecx*4+2], al ; rotating object
 
-	loop draw
+	dec ecx
+	cmp ecx, 1920*340
+	ja  draw
 
 	; ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset)
 	mov ecx, esp ; buffer ptr
