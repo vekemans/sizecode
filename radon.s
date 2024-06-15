@@ -22,9 +22,10 @@ entry:
 section .data
 
 const:
+	; 1-zt*rot should be close to zero to minimize error when mapping z->x
 	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame
-	dd 0x3ba3d70a ; 0.005, sum scaling
-	dd 0x42e53333 ; 114.6, z scaling
+	dd 0x3b83126f ; 0.004, sum scaling
+	dd 0x42e5199a ; 114.55, z scaling
 
 section .text
 
@@ -45,14 +46,14 @@ draw:
 
 	push eax
 
-	;; translate to center
+	; translate to center
 	add edx, -960
 	add eax, -540
 
 	push edx
 	push eax
 
-	;; rotate x,y: rx = x * cos + y * sin, ry = y * cos - x * sin
+	; rotate x,y: rx = x * cos + y * sin, ry = y * cos - x * sin
 	fld     st0           ; [z z]
 	fsincos               ; [cos sin z]
 	fild    dword [esp  ] ; [y cos sin z]
@@ -78,7 +79,7 @@ draw:
 	fld dword [esp] ; [sum, z]
 	pop esi
 
-	;; indicator function of object: 200x100 rectangle, center at 0,0
+	; indicator function of object: 200x100 rectangle, center at 0,0
 	add  edx, 99
 	cmp  edx, 199
 	setb al
