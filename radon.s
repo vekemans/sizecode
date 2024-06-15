@@ -26,7 +26,7 @@ entry:
 
 main:
 	; evaluation grid of 1920*224 (rectangle diagonal)
-	mov ecx, 1420800 ; pixel index, 1920*1080 - 1920*428
+	mov ecx, (1920*1080 - 1920*428) ; pixel index
 
 draw:
 	mov ebx, 1920
