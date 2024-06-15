@@ -1,4 +1,4 @@
-; radon transform sinogram of 400x100 rectangle
+; radon transform sinogram of 200x100 rectangle
 bits 32
 org 0x00010000
 	; minimal ELF header (muppetlabs.com/~breadbox/software/tiny/teensy.html)
@@ -34,8 +34,8 @@ section .text
 	fldz                      ; sum=0 (line integral)
 
 main:
-	; evaluation grid of 1920*400
-	mov ecx, 1420800 ; pixel index, 1920*1080 - 1920*340
+	; evaluation grid of 1920*224 (rectangle diagonal)
+	mov ecx, 1420800 ; pixel index, 1920*1080 - 1920*428
 
 draw:
 	mov ebx, 1920
@@ -78,7 +78,7 @@ draw:
 	fld dword [esp] ; [sum, z]
 	pop esi
 
-	;; indicator function of object: 400x100 rectangle, center at 0,0
+	;; indicator function of object: 200x100 rectangle, center at 0,0
 	add  edx, 99
 	cmp  edx, 199
 	setb al
@@ -119,7 +119,7 @@ draw:
 	add [esp+edx*4+2], al ; sinogram
 
 	dec ecx
-	cmp ecx, 1920*340
+	cmp ecx, 1920*428
 	ja  draw
 
 	fadd dword [const] ; increment z

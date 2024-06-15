@@ -16,7 +16,7 @@ float cosf(float x) {
 	return (0.020701f * x4 - 0.456349f * x2 + 1) / (0.00086f * x4 + 0.043651f * x2 + 1);
 }
 
-// indicator function, 400x100 rectangle with center at 0,0
+// indicator function, 200x100 rectangle with center at 0,0
 static int f(int x, int y) {
 	return -100 < x && x < 100 && -50 < y && y < 50;
 }
@@ -46,8 +46,9 @@ int main() {
 	do {
 		float zpi = z - pi * (int)(z / pi); // modulo pi
 		float cs = cosf(zpi), sn = sinf(zpi), sum = 0;
-		for (int x = wt-760; x > 760; x--) {
-			for (int y = ht-340; y > 340; y--) {
+		// rectangle diagonal = 224
+		for (int x = wt-848; x > 848; x--) {
+			for (int y = ht-428; y > 428; y--) {
 				int s = (x-960) * cs + (y-540) * sn, u = (y-540) * cs - (x-960) * sn;
 				sum = 0.005f * (sum + f(s,u));
 				buf[((int)(zt*z)+wt*y)*4+2] += 255u * sum; // sinogram
