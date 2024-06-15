@@ -19,16 +19,6 @@ entry:
 	mov al, 5      ; 5 = open syscall
 	int 0x80       ; open /dev/fb0 = 3
 
-section .data
-
-const:
-	; 1-zt*rot should be close to zero to minimize error when mapping z->x
-	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame
-	dd 0x3b83126f ; 0.004, sum scaling
-	dd 0x42e5199a ; 114.55, z scaling
-
-section .text
-
 	mov  ebp, 1920 * 1080 * 4 ; screen size
 	sub  esp, ebp             ; alloca
 	fldz                      ; angle z=0
@@ -135,3 +125,9 @@ draw:
 	int 0x80      ; syscall
 
 	jmp main
+
+const:
+	; 1-zt*rot should be close to zero to minimize error when mapping z->x
+	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame
+	dd 0x3b83126f ; 0.004, sum scaling
+	dd 0x42e5199a ; 114.55, z scaling
