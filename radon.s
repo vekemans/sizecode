@@ -21,24 +21,29 @@ entry:
 
 section .data
 
-constants:
+const:
 	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame
+	dd 0x3ba3d70a ; 0.005, sum scaling
+	dd 0x42e53333 ; 114.6, z scaling
 
 section .text
 
 	mov  ebp, 1920 * 1080 * 4 ; screen size
 	sub  esp, ebp             ; alloca
 	fldz                      ; angle z=0
+	fldz                      ; sum=0 (line integral)
 
 main:
 	; evaluation grid of 1920*400
-	mov ecx, 1420800 ; 1920*1080 - 1920*340
+	mov ecx, 1420800 ; pixel index, 1920*1080 - 1920*340
 
 draw:
 	mov ebx, 1920
 	mov eax, ecx
 	cdq
 	div ebx ; edx = x-coord , eax = y-coord
+
+	push eax
 
 	;; translate to center
 	add edx, -960
@@ -47,29 +52,31 @@ draw:
 	push edx
 	push eax
 
-	;; rotate x,y: x0 = x * cos + y * sin, y0 = y * cos - x * sin
-	fld     st0           ; z z
-	fsincos               ; cos sin z
-	fild    dword [esp  ] ; y cos sin z
-	fild    dword [esp+4] ; x y cos sin z
-	fld     st3           ; sin x y cos sin z
-	fld     st3           ; cos sin x y cos sin z
-	fmul    st0, st2      ; x*cos sin x y cos sin z
-	fxch                  ; sin x*cos x y cos sin z
-	fmul    st0, st3      ; y*sin x*cos x y cos sin z
-	faddp                 ; x*cos+y*sin x y cos sin z
-	fistp   dword [esp+4] ; x y cos sin z
-	fxch    st2           ; cos y x sin z
-	fmulp                 ; y*cos x sin z
-	fxch    st2           ; sin x y*cos z
-	fmulp                 ; x*sin y*cos z
-	fsubp                 ; y*cos-x*sin z
-	fistp   dword [esp  ] ; z
+	;; rotate x,y: rx = x * cos + y * sin, ry = y * cos - x * sin
+	fld     st0           ; [z z]
+	fsincos               ; [cos sin z]
+	fild    dword [esp  ] ; [y cos sin z]
+	fild    dword [esp+4] ; [x y cos sin z]
+	fld     st3           ; [sin x y cos sin z]
+	fld     st3           ; [cos sin x y cos sin z]
+	fmul    st0, st2      ; [x*cos sin x y cos sin z]
+	fxch                  ; [sin x*cos x y cos sin z]
+	fmul    st0, st3      ; [y*sin x*cos x y cos sin z]
+	faddp                 ; [x*cos+y*sin x y cos sin z]
+	fistp   dword [esp+4] ; [x y cos sin z]
+	fxch    st2           ; [cos y x sin z]
+	fmulp                 ; [y*cos x sin z]
+	fxch    st2           ; [sin x y*cos z]
+	fmulp                 ; [x*sin y*cos z]
+	fsubp                 ; [y*cos-x*sin z]
+	fistp   dword [esp  ] ; [z]
 
 	pop edi ; rotated y
 	pop edx ; rotated x
 
-	push eax ; y
+	push esi ; sum
+	fld dword [esp] ; [sum, z]
+	pop esi
 
 	;; indicator function of object: 400x100 rectangle, center at 0,0
 	add  edx, 99
@@ -80,16 +87,42 @@ draw:
 	setb bl
 	and  al, bl
 
-	mov ebx, 0xff
-	mul ebx
+	push eax
+	push 0xff
 
-	pop ebx ; y note needed for sinogram
+	; summation of indicator function outputs
+	fiadd dword [esp+4]   ; [sum+f(rx,ry) z]
+	fmul  dword [const+4] ; [0.005*(sum+f(rx,ry)) z]
+	fld   st0
+	fimul dword [esp]     ; [0xff*0.005*(sum+f(rx,ry)) 0.005*(sum+f(rx,ry)) z]
 
-	mov [esp+ecx*4+2], al ; rotating object
+	pop   eax
+	fistp dword [esp]    ; [sum z]
+	pop   eax            ; color output
+	pop   edi            ; original y
+	imul  ebx, edi, 1920 ; y * 1920
+
+	push esi
+	fstp dword [esp] ; [z]
+	pop esi ; sum
+
+	push edx
+
+	; scale z (z -> x mapping)
+	fld   dword [const+8] ; [114.6 z]
+	fmul  st0, st1        ; [114.6*z z]
+	fistp dword [esp]     ; [z]
+
+	pop edx
+	add edx, ebx ; z + y * 1920
+
+	add [esp+edx*4+2], al ; sinogram
 
 	dec ecx
 	cmp ecx, 1920*340
 	ja  draw
+
+	fadd dword [const] ; increment z
 
 	; ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset)
 	mov ecx, esp ; buffer ptr
@@ -100,5 +133,4 @@ draw:
 	mov eax, 0xb5 ; pwrite64
 	int 0x80      ; syscall
 
-	fadd dword [constants] ; increment z
 	jmp main
