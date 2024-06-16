@@ -75,8 +75,8 @@ draw:
 	setb al
 	add  edi, 49
 	cmp  edi, 99
-	setb bl
-	and  al, bl
+	setb dl
+	and  al, dl
 
 	push eax
 	push 0x7f
@@ -88,10 +88,10 @@ draw:
 	fimul dword [esp]     ; [0x7f*const*(sum+f(rx,ry)) 0.005*(sum+f(rx,ry)) z]
 
 	pop   eax
-	fistp dword [esp]    ; [sum z]
-	pop   eax            ; color output
-	pop   edi            ; original y
-	imul  ebx, edi, 1920 ; y * 1920
+	fistp dword [esp] ; [sum z]
+	pop   eax         ; color output
+	pop   edi         ; original y
+	imul  ebx, edi    ; y * 1920
 
 	push esi
 	fstp dword [esp] ; [z]
