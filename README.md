@@ -1,4 +1,4 @@
-#### radon.s (linux, 258 bytes)
+#### radon.s (linux, 256 bytes)
 [radon transform](en.wikipedia.org/wiki/Radon_transform) sinogram of a 200x100 rectangle  
 compilation: nasm radon.s -o radon  
 requires permission to /dev/fb0 (video group or root) and access to a tty (ctrl+alt+fn\[1-6\])  
