@@ -22,7 +22,6 @@ entry:
 	mov  ebp, 1920 * 1080 * 4 ; screen size
 	sub  esp, ebp             ; alloca
 	fldz                      ; angle z=0
-	fldz                      ; sum=0 (line integral)
 
 main:
 	; evaluation grid of 1920*224 (rectangle diagonal)
