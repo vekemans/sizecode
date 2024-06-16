@@ -1,4 +1,4 @@
-; renders 400x400 red square on the center of the screen (assumes 1920x1080 resolution)
+; renders 200x200 red square on the center of the screen (assumes 1920x1080 resolution)
 bits 32
 org 0x00010000
 	; minimal ELF header (muppetlabs.com/~breadbox/software/tiny/teensy.html)
