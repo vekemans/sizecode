@@ -79,13 +79,13 @@ draw:
 	and  al, bl
 
 	push eax
-	push 0xff
+	push 0x7f
 
 	; summation of indicator function outputs
 	fiadd dword [esp+4]   ; [sum+f(rx,ry) z]
-	fmul  dword [const+4] ; [0.005*(sum+f(rx,ry)) z]
+	fmul  dword [const]   ; [const*(sum+f(rx,ry)) z]
 	fld   st0
-	fimul dword [esp]     ; [0xff*0.005*(sum+f(rx,ry)) 0.005*(sum+f(rx,ry)) z]
+	fimul dword [esp]     ; [0x7f*const*(sum+f(rx,ry)) 0.005*(sum+f(rx,ry)) z]
 
 	pop   eax
 	fistp dword [esp]    ; [sum z]
@@ -100,7 +100,7 @@ draw:
 	push edx
 
 	; scale z (z -> x mapping)
-	fld   dword [const+8] ; [114.6 z]
+	fld   dword [const+4] ; [114.6 z]
 	fmul  st0, st1        ; [114.6*z z]
 	fistp dword [esp]     ; [z]
 
@@ -128,6 +128,5 @@ draw:
 
 const:
 	; 1-zt*rot should be close to zero to minimize error when mapping z->x
-	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame
-	dd 0x3b83126f ; 0.004, sum scaling
+	dd 0x3c0f0846 ; 0.00873, rotation of ~0.5 deg per frame, also used for sum scaling
 	dd 0x42e5199a ; 114.55, z scaling
