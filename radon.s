@@ -26,7 +26,9 @@ entry:
 
 main:
 	; evaluation grid of 1920*224 (rectangle diagonal)
-	mov ecx, (1920*1080 - 1920*428) ; pixel index
+	;mov ecx, (1920*1080 - 1920*428) ; pixel index
+	mov ecx, ebp ; pixel index
+	sar ecx, 2
 
 draw:
 	mov ebx, 1920
@@ -79,7 +81,8 @@ draw:
 	and  al, dl
 
 	push eax
-	push 0x7f
+	push 0x4f
+	;push 0x7f
 
 	; summation of indicator function outputs
 	fiadd dword [esp+4]   ; [sum+f(rx,ry) z]
@@ -110,8 +113,9 @@ draw:
 	add [esp+edx*4+2], al ; sinogram
 
 	dec ecx
-	cmp ecx, 1920*428
-	ja  draw
+	jnz draw
+	;cmp ecx, 1920*428
+	;ja  draw
 
 	fadd dword [const] ; increment z
 
